@@ -6,6 +6,8 @@
 #include <map>
 #include <sstream>
 #include <cmath>
+#include <string>
+#include <vector>
 
 using namespace std; 
 
@@ -14,12 +16,12 @@ class classifier
 
 	public:
 
-		int ** trainingData ;
+		vector<char*> trainingData ;
 		vector<int> trainingLabel;  
 
 		int ** testingData; 
-
 		vector<int> testLabel; 
+
 		// size of trainingLabel vector 
 		int numClass; 
 
@@ -34,18 +36,35 @@ class classifier
 
 		//map <int, double> posterior;
 
+		// map of class to its prior
 		map <int, double> prior;  
 
-		// train method for classifer
-		void train(vector<int> label, int ** data);
-
-		void testing();
-
-		void evaluation();
-
+		// the labels predicted from the test data after testing()
 		vector<int> predictedLabels; 
 
 
+		/********************************************************
+			METHODS
+		 ********************************************************/
 
+		classifier();
+		~classifier();
+
+		// train method for classifer
+		// calculates prior and likehoods for each class
+		// k is constant for Laplace smoothing
+		void train(int k);
+
+		// testing method
+		// uses the prior and likehoods for each class to compute the posterior,
+		// then makes a decision using MAP (predictedLabels contains decisions)
+		void testing();
+
+		// evaluates the accurate of the testing based on the true labels
+		void evaluation();
+
+		void load_training_data();
+
+		void load_test_data();
 };
 #endif

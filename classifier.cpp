@@ -10,72 +10,80 @@
 #include "classifier.h"
 
 
-void classifier::train(vector<int> label, int ** data, int k)
+void classifier::train(int k)
 {
 	int datax; 
 	int datay = 0; 
 
 	for (int i = 0; i < 10; i++)
 	{
+		if (likelihood[i] != NULL)
+			cout << "LIKELIHOOD IS NOT NULL. SHE'S GONNA BLOW (up), HIT THE DECK!" << endl;
 		likelihood[i] = NULL; 
 		classCount[i] = 0; 
 	}
 
 	for (int i = 0; i < numClass; i++)
 	{
-
 		classCount[i] += 1; 
 
-		if (likelihood[label[i]] == NULL)
+		// check if classifier already has an associated matrix thing
+		if (likelihood[trainingLabel[i]] == NULL)
 		{
-			double ** temp = new double[28][28]; 
+			double ** temp = new double * [28]; 
 		
-			for (int x = 0; x < 28; x++)
+			/* NOTE: I switched x and y around. To me, it's easier to understand.
+				A matrix in C++ can be created in any number of ways.
+				In this case, temp is an array of rows.
+				Each row then creates an array of 28 elements of double (gives us columns).
+			*/
+			for (int y = 0; y < 28; y++)
 			{
-				for (int y = 0; y < 28; y++)
+				temp[y] = new double[28];
+				for (int x = 0; x < 28; x++)
 				{
-					temp[x][y] = 0; 
+					temp[y][x] = 0; 
 				}
 			}
 
-			likelihood[label[i]] = temp; 
+			likelihood[trainingLabel[i]] = temp; 
 		}
 
-		double ** matrix = likelihood[label[i]];
+		double ** matrix = likelihood[trainingLabel[i]];
 		
 		for (datax = 0; datax < 28; datax++)
 		{
 			int newy = datay + 28; 
 			for (; datay < newy; datay++)
 			{
-				if (data[datax][datay] == ' ')
+				if (trainingData[datay][datax] == ' ')
 				{
-					matrix[datax][datay] += 0.0; 
+					matrix[datay][datax] += 0.0; 
 				}
 				else 
 				{
-					matrix[datax][datay] += 1.0; 
+					matrix[datay][datax] += 1.0; 
 				}
 			}
 		}
 	}
 
+	/* LAPLACE SMOOTHING */
 	for (int c = 0; c < 10; c++)
 	{
-		double ** matrix = likelihood[label[c]];
+		double ** matrix = likelihood[trainingLabel[c]];
 
 		// prior calculation
-		prior[c] = classCount[c] / numClass; 
+		prior[c] = (double)(classCount[c] / numClass);
 
 		for (int x = 0; x < 28; x++)
 		{
 			for (int y = 0; y < 28; y++)
 			{
-				matrix[x][y] = ((matrix[x][y] + k) / (classCount[c] + k * 2); 
+				matrix[y][x] = ((double)(matrix[y][x] + k) / (double)(classCount[c] + k * 2)); 
 			}
 		}
 	}
-
 }
 
 void classifier::testing()
@@ -132,7 +140,7 @@ void classifier::evaluation()
 	for (int i = 0; i < testClass; i++)
 	{
 		tclassCount[testLabel[i]] += 1; 
-		if (testLabel[i] == predicatedLabels[i])
+		if (testLabel[i] == predictedLabels[i])
 			classification[testLabel[i]] += 1; 
 	}
 
@@ -142,5 +150,47 @@ void classifier::evaluation()
 	}
 }
 
+void classifier::load_training_data()
+{
+	string line;
+	ifstream fileData("digitdata/trainingimages.txt");
+	ifstream fileLabels("digitdata/traininglabels.txt");
 
+	if (fileData.is_open())
+	{
+		int y = 0;
+		while ( getline(fileData, line) )
+		{
+			trainingData.push_back( new char[28] );
+			for (int x = 0; x < 28; x++)
+			{
+				trainingData[y][x] = line[x];
+			}
+			y++;
+		}
+		fileData.close();
+	}
+	else cout << "Can't open file." << endl;
+}
 
+void classifier::load_test_data()
+{
+
+}
+
+classifier::classifier() {};
+
+classifier::~classifier()
+{
+	for (int c = 0; c < 10; c++)
+	{
+		if ( likelihood[c] != NULL )
+			// deallocate
+			delete[] likelihood[c];
+	}
+	for (int i = 0; i < trainingData.size(); i++)
+	{
+		// deallocate
+		delete[] trainingData[i];
+	}
+}
