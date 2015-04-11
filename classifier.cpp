@@ -25,7 +25,7 @@ void classifier::train(int k)
 
 	for (int i = 0; i < numClass; i++)
 	{
-		classCount[i] += 1; 
+		classCount[trainingLabel[i]] += 1;
 
 		// check if classifier already has an associated matrix thing
 		if (likelihood[trainingLabel[i]] == NULL)
@@ -51,18 +51,18 @@ void classifier::train(int k)
 
 		double ** matrix = likelihood[trainingLabel[i]];
 		
+		int newy = datay + 28; 
 		for (datax = 0; datax < 28; datax++)
 		{
-			int newy = datay + 28; 
 			for (; datay < newy; datay++)
 			{
 				if (trainingData[datay][datax] == ' ')
 				{
-					matrix[datay][datax] += 0.0; 
+					matrix[datay%28][datax] += 0.0; 
 				}
 				else 
 				{
-					matrix[datay][datax] += 1.0; 
+					matrix[datay%28][datax] += 1.0; 
 				}
 			}
 		}
@@ -74,7 +74,7 @@ void classifier::train(int k)
 		double ** matrix = likelihood[trainingLabel[c]];
 
 		// prior calculation
-		prior[c] = (double)(classCount[c] / numClass);
+		prior[c] = (double)classCount[c] / (double)numClass;
 
 		for (int x = 0; x < 28; x++)
 		{
@@ -86,33 +86,39 @@ void classifier::train(int k)
 	}
 }
 
-void classifier::testing()
+void classifier::test()
 {
 	int MAP = 0; 
 	double maxPosterior = 0.0; 
 	//double posterior[10]; 
+	int testx; 
+	int testy = 0; 
 
 	for (int i = 0; i < testClass; i++)
 	{
 		for (int c = 0; c < 10; c++)
 		{
-			int testx; 
-			int testy = 0; 
+			double result = log10(prior[c]); 
 
-			int result = log10(prior[c]); 
-
+			int newy = testy + 28; 
 			for (testx = 0; testx < 28; testx++)
 			{
-				int tempy = testy + 28; 
-				for (; testy < tempy; testy++)
+				for (; testy < newy; testy++)
 				{
-					if (testingData[testx][testy] == '#' || testingData[testx][testy] == '+')
-						result += log10( (likelihood[c])[testx][testy] ); 
+					if (testingData[testy%28][testx] == '#' || testingData[testy%28][testx] == '+')
+					{
+						result += log10( (likelihood[c])[testy%28][testx] ); 
+					}
 					else
-						result += log10( (1 - (likelihood[c])[testx][testy]) ); 
+					{
+						result += log10( (1 - (likelihood[c])[testy%28][testx]) ); 
+					}
 				}
 			}
 			//posterior[c] = result; 
+
+			//result = pow(10.0, result);
+			//cout << "result " << result << " " << "maxPosterior" << " " << maxPosterior << endl;
 			if (result > maxPosterior)
 			{
 				MAP = c;
@@ -126,7 +132,6 @@ void classifier::testing()
 
 void classifier::evaluation()
 {
-	double classification_rate[10]; 
 	int classification[10]; 
 	int tclassCount[10]; 
 
@@ -137,16 +142,20 @@ void classifier::evaluation()
 		tclassCount[x] = 0; 
 	}
 
+	//cout << "init to zero" << endl;
+
 	for (int i = 0; i < testClass; i++)
 	{
-		tclassCount[testLabel[i]] += 1; 
-		if (testLabel[i] == predictedLabels[i])
-			classification[testLabel[i]] += 1; 
+		//cout << testingLabel[i] << " " << predictedLabels[i] << endl;
+		tclassCount[testingLabel[i]] += 1; 
+		if (testingLabel[i] == predictedLabels[i])
+			classification[testingLabel[i]] += 1; 
 	}
 
 	for (int x = 0; x < 10; x++)
 	{
-		classification_rate[x] = classification[x] / tclassCount[x]; 
+		//cout << classification[x] << " " << tclassCount[x] << endl;
+		classification_rate[x] = (double)classification[x] / (double)tclassCount[x]; 
 	}
 }
 
@@ -155,6 +164,8 @@ void classifier::load_training_data()
 	string line;
 	ifstream fileData("digitdata/trainingimages.txt");
 	ifstream fileLabels("digitdata/traininglabels.txt");
+
+	numClass = 0;
 
 	if (fileData.is_open())
 	{
@@ -168,14 +179,61 @@ void classifier::load_training_data()
 			}
 			y++;
 		}
+
+		numClass = y / 28;
+
 		fileData.close();
 	}
-	else cout << "Can't open file." << endl;
+	else cout << "Can't open file for data." << endl;
+
+	if (fileLabels.is_open())
+	{
+		int y = 0;
+		while ( getline(fileLabels, line) )
+		{
+			trainingLabel.push_back(atoi(line.c_str()));
+		}
+		fileLabels.close();
+	}
+	else cout << "Can't open file for labels." << endl;
 }
 
-void classifier::load_test_data()
+void classifier::load_testing_data()
 {
+	string line;
+	ifstream fileData("digitdata/testimages.txt");
+	ifstream fileLabels("digitdata/testlabels.txt");
 
+	testClass = 0;
+
+	if (fileData.is_open())
+	{
+		int y = 0;
+		while ( getline(fileData, line) )
+		{
+			testingData.push_back( new char[28] );
+			// increment number of training classes
+			for (int x = 0; x < 28; x++)
+			{
+				testingData[y][x] = line[x];
+			}
+			y++;
+		}
+
+	}
+	else cout << "Can't open file for data." << endl;
+
+	if (fileLabels.is_open())
+	{
+		while ( getline(fileLabels, line) )
+		{
+			testingLabel.push_back(atoi(line.c_str()));
+			// Increment number of test classes
+			testClass++;
+		}
+		fileLabels.close();
+	}
+	else cout << "Can't open file for labels." << endl;
 }
 
 classifier::classifier() {};
@@ -185,12 +243,26 @@ classifier::~classifier()
 	for (int c = 0; c < 10; c++)
 	{
 		if ( likelihood[c] != NULL )
+		{
 			// deallocate
+			for (int y = 0; y < 28; y++)
+				delete[] (likelihood[c])[y];
 			delete[] likelihood[c];
+		}
 	}
+
 	for (int i = 0; i < trainingData.size(); i++)
 	{
 		// deallocate
-		delete[] trainingData[i];
+		if ( trainingData[i] != NULL )
+			delete[] trainingData[i];
 	}
+
+	for (int i = 0; i < testingData.size(); i++)
+	{
+		// deallocate
+		if ( testingData[i] != NULL )
+			delete[] testingData[i];
+	}
+	
 }

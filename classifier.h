@@ -8,6 +8,7 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <stdlib.h>
 
 using namespace std; 
 
@@ -19,8 +20,8 @@ class classifier
 		vector<char*> trainingData ;
 		vector<int> trainingLabel;  
 
-		int ** testingData; 
-		vector<int> testLabel; 
+		vector<char*> testingData; 
+		vector<int> testingLabel; 
 
 		// size of trainingLabel vector 
 		int numClass; 
@@ -42,6 +43,8 @@ class classifier
 		// the labels predicted from the test data after testing()
 		vector<int> predictedLabels; 
 
+		
+		double classification_rate[10];
 
 		/********************************************************
 			METHODS
@@ -55,16 +58,16 @@ class classifier
 		// k is constant for Laplace smoothing
 		void train(int k);
 
-		// testing method
+		// test method
 		// uses the prior and likehoods for each class to compute the posterior,
 		// then makes a decision using MAP (predictedLabels contains decisions)
-		void testing();
+		void test();
 
 		// evaluates the accurate of the testing based on the true labels
 		void evaluation();
 
 		void load_training_data();
 
-		void load_test_data();
+		void load_testing_data();
 };
 #endif
