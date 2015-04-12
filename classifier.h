@@ -17,6 +17,9 @@ class classifier
 
 	public:
 
+		int TX;
+		int TY;
+
 		vector<char*> trainingData ;
 		vector<int> trainingLabel;  
 

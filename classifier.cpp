@@ -15,12 +15,12 @@ void classifier::train(int k)
 	int datax; 
 	int datay = 0; 
 
-	for (int i = 0; i < 10; i++)
+	for (int c = 0; c < 10; c++)
 	{
-		if (likelihood[i] != NULL)
+		if (likelihood[c] != NULL)
 			cout << "LIKELIHOOD IS NOT NULL. SHE'S GONNA BLOW (up), HIT THE DECK!" << endl;
-		likelihood[i] = NULL; 
-		classCount[i] = 0; 
+		likelihood[c] = NULL; 
+		classCount[c] = 0; 
 	}
 
 	for (int i = 0; i < numClass; i++)
@@ -54,6 +54,7 @@ void classifier::train(int k)
 		int newy = datay + 28; 
 		for (datax = 0; datax < 28; datax++)
 		{
+			int oldy = datay;
 			for (; datay < newy; datay++)
 			{
 				if (trainingData[datay][datax] == ' ')
@@ -65,13 +66,14 @@ void classifier::train(int k)
 					matrix[datay%28][datax] += 1.0; 
 				}
 			}
+			if (datax != 27) datay = oldy;
 		}
 	}
 
 	/* LAPLACE SMOOTHING */
 	for (int c = 0; c < 10; c++)
 	{
-		double ** matrix = likelihood[trainingLabel[c]];
+		double ** matrix = likelihood[c];
 
 		// prior calculation
 		prior[c] = (double)classCount[c] / (double)numClass;
@@ -90,44 +92,56 @@ void classifier::test()
 {
 	int MAP = 0; 
 	double maxPosterior = 0.0; 
-	//double posterior[10]; 
-	int testx; 
-	int testy = 0; 
 
+	int newy = 0;
 	for (int i = 0; i < testClass; i++)
 	{
+		int testx; 
+		int testy = newy; 
+		int oldy = testy;
+		newy += 28;
+
 		for (int c = 0; c < 10; c++)
 		{
 			double result = log10(prior[c]); 
 
-			int newy = testy + 28; 
 			for (testx = 0; testx < 28; testx++)
 			{
+					//cout << "testx " << testx << " newy " << newy << " c " << c << " i " << i << endl;
 				for (; testy < newy; testy++)
 				{
-					if (testingData[testy%28][testx] == '#' || testingData[testy%28][testx] == '+')
+					if (testingData[testy][testx] != ' ')
 					{
 						result += log10( (likelihood[c])[testy%28][testx] ); 
+						//if (testy == TY and testx == TX)
+						//	cout << (likelihood[c])[testy][testx] << endl;
 					}
 					else
 					{
 						result += log10( (1 - (likelihood[c])[testy%28][testx]) ); 
 					}
 				}
+				testy = oldy; // reset for next class
 			}
-			//posterior[c] = result; 
 
+			/* convert result "back" to a probability between 0 and 1 */
 			//result = pow(10.0, result);
-			//cout << "result " << result << " " << "maxPosterior" << " " << maxPosterior << endl;
-			if (result > maxPosterior)
+			//cout << "result " << result << " " << "maxPosterior" << " " << maxPosterior << " c " << c << endl;
+			/* We say "less than" because result and maxPosterior are LOGARITHMIC */
+			if (result < maxPosterior)
 			{
 				MAP = c;
 				maxPosterior = result;  
 			}
 		}
+		//cout << MAP << endl;
 		maxPosterior = 0.0; 
 		predictedLabels.push_back(MAP);
 	}
+
+	for (int henry = 0; henry < predictedLabels.size(); henry++)
+		cout << predictedLabels[henry] << " ";
+	cout << endl;
 }
 
 void classifier::evaluation()
@@ -216,6 +230,11 @@ void classifier::load_testing_data()
 			for (int x = 0; x < 28; x++)
 			{
 				testingData[y][x] = line[x];
+				if (testingData[y][x] != ' ')
+				{
+					TX = x;
+					TY = y;
+				}
 			}
 			y++;
 		}
