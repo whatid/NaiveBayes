@@ -91,7 +91,7 @@ void classifier::train(int k)
 void classifier::test()
 {
 	int MAP = 0; 
-	double maxPosterior = 0.0; 
+	double maxPosterior = -999999.999999; 
 
 	int newy = 0;
 	for (int i = 0; i < testClass; i++)
@@ -126,22 +126,23 @@ void classifier::test()
 
 			/* convert result "back" to a probability between 0 and 1 */
 			//result = pow(10.0, result);
-			//cout << "result " << result << " " << "maxPosterior" << " " << maxPosterior << " c " << c << endl;
+			//cout << "result " << result << " " << "maxPosterior" << " " << maxPosterior << " c " << c << " MAP ";
 			/* We say "less than" because result and maxPosterior are LOGARITHMIC */
-			if (result < maxPosterior)
+			if (result > maxPosterior)
 			{
 				MAP = c;
 				maxPosterior = result;  
 			}
+			//cout << MAP << endl;
 		}
 		//cout << MAP << endl;
-		maxPosterior = 0.0; 
+		maxPosterior = -999999.999999; 
 		predictedLabels.push_back(MAP);
 	}
 
-	for (int henry = 0; henry < predictedLabels.size(); henry++)
-		cout << predictedLabels[henry] << " ";
-	cout << endl;
+	//for (int henry = 0; henry < predictedLabels.size(); henry++)
+	//	cout << predictedLabels[henry] << " ";
+	//cout << endl;
 }
 
 void classifier::evaluation()
