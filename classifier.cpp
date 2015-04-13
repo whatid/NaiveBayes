@@ -85,13 +85,16 @@ void classifier::train(int k)
 				matrix[y][x] = ((double)(matrix[y][x] + k) / (double)(classCount[c] + k * 2)); 
 			}
 		}
+		cout << matrix[14][14] << endl;
 	}
 }
 
 void classifier::test()
 {
 	int MAP = 0; 
-	double maxPosterior = -999999.999999; 
+	int ML = 0;
+	double maxPosterior = -1.0/0.0; 
+	double maxLikelihood = -1.0/0.0;
 
 	int newy = 0;
 	for (int i = 0; i < testClass; i++)
@@ -103,7 +106,7 @@ void classifier::test()
 
 		for (int c = 0; c < 10; c++)
 		{
-			double result = log10(prior[c]); 
+			double result = 0;
 
 			for (testx = 0; testx < 28; testx++)
 			{
@@ -113,8 +116,6 @@ void classifier::test()
 					if (testingData[testy][testx] != ' ')
 					{
 						result += log10( (likelihood[c])[testy%28][testx] ); 
-						//if (testy == TY and testx == TX)
-						//	cout << (likelihood[c])[testy][testx] << endl;
 					}
 					else
 					{
@@ -126,18 +127,27 @@ void classifier::test()
 
 			/* convert result "back" to a probability between 0 and 1 */
 			//result = pow(10.0, result);
-			//cout << "result " << result << " " << "maxPosterior" << " " << maxPosterior << " c " << c << " MAP ";
+			//cout << "result " << result << " " << "maxPosterior" << " " << maxPosterior << " c " << c;
 			/* We say "less than" because result and maxPosterior are LOGARITHMIC */
+
+			if (result > maxLikelihood)
+			{
+				ML = c;
+				maxLikelihood = result;  
+			}
+
+			result += log10(prior[c]);
 			if (result > maxPosterior)
 			{
 				MAP = c;
 				maxPosterior = result;  
 			}
-			//cout << MAP << endl;
 		}
-		//cout << MAP << endl;
-		maxPosterior = -999999.999999; 
-		predictedLabels.push_back(MAP);
+		//cout << " MAP " << MAP << endl;
+		maxPosterior = -1.0/0.0; 
+		maxLikelihood = -1.0/0.0; 
+		predictedLabelsML.push_back(ML);
+		predictedLabelsMAP.push_back(MAP);
 	}
 
 	//for (int henry = 0; henry < predictedLabels.size(); henry++)
@@ -147,13 +157,15 @@ void classifier::test()
 
 void classifier::evaluation()
 {
-	int classification[10]; 
-	int tclassCount[10]; 
+	int classificationMAP[10]; 
+	int classificationML[10]; 
 
 	for (int x = 0; x < 10; x++)
 	{
-		classification[x] = 0; 
-		classification_rate[x] = 0.0; 
+		classificationMAP[x] = 0; 
+		classificationML[x] = 0; 
+		classification_rateMAP[x] = 0.0; 
+		classification_rateML[x] = 0.0; 
 		tclassCount[x] = 0; 
 	}
 
@@ -163,14 +175,17 @@ void classifier::evaluation()
 	{
 		//cout << testingLabel[i] << " " << predictedLabels[i] << endl;
 		tclassCount[testingLabel[i]] += 1; 
-		if (testingLabel[i] == predictedLabels[i])
-			classification[testingLabel[i]] += 1; 
+		if (testingLabel[i] == predictedLabelsMAP[i])
+			classificationMAP[testingLabel[i]] += 1; 
+		if (testingLabel[i] == predictedLabelsML[i])
+			classificationML[testingLabel[i]] += 1; 
 	}
 
 	for (int x = 0; x < 10; x++)
 	{
-		//cout << classification[x] << " " << tclassCount[x] << endl;
-		classification_rate[x] = (double)classification[x] / (double)tclassCount[x]; 
+		//cout << "classification " << classification[x] << "	tclassCount " << tclassCount[x] << endl;
+		classification_rateMAP[x] = (double)classificationMAP[x] / (double)tclassCount[x]; 
+		classification_rateML[x] = (double)classificationML[x] / (double)tclassCount[x]; 
 	}
 }
 
@@ -256,6 +271,37 @@ void classifier::load_testing_data()
 	else cout << "Can't open file for labels." << endl;
 }
 
+void classifier::confusionMatrix()
+{
+
+	double ** matrix = new double * [10]; 
+	for (int x = 0; x < 10; x++)
+	{
+		matrix[x] = new double [10]; 
+		for (int y = 0; y < 10; y++)
+		{
+			matrix[x][y] = 0; 
+		}
+	}
+
+	for (int it = 0; it < testClass; it++)
+	{
+		matrix[predictedLabelsMAP[it]][testingLabel[it]] += (1.0 / tclassCount[testingLabel[it]]); 
+	}
+
+	cout.setf(ios::fixed, ios::floatfield);
+	cout.precision(2); 
+	for (int x = 0; x < 10; x++)
+	{
+		for (int y = 0; y < 10; y++)
+		{
+			cout << (matrix[y][x] * 100) << "%" << " "; 
+		}
+		cout << "\n";
+	}
+
+}
+
 classifier::classifier() {};
 
 classifier::~classifier()
@@ -284,5 +330,4 @@ classifier::~classifier()
 		if ( testingData[i] != NULL )
 			delete[] testingData[i];
 	}
-	
 }

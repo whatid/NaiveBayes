@@ -44,10 +44,13 @@ class classifier
 		map <int, double> prior;  
 
 		// the labels predicted from the test data after testing()
-		vector<int> predictedLabels; 
+		vector<int> predictedLabelsMAP; 
+		vector<int> predictedLabelsML; 
 
 		
-		double classification_rate[10];
+		int tclassCount[10]; 
+		double classification_rateMAP[10];
+		double classification_rateML[10];
 
 		/********************************************************
 			METHODS
@@ -72,5 +75,8 @@ class classifier
 		void load_training_data();
 
 		void load_testing_data();
+
+		// make the confusion matrix
+		void confusionMatrix();
 };
 #endif

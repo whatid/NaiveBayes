@@ -1,18 +1,24 @@
 #include "classifier.h"
 
 #include <iostream>
+#include <stdlib.h>
+#include <stdio.h>
+
+#define K_MAX 2
 
 using namespace std;
 
+int to_file = 1;
+
 int main()
 {
-	for (int k = 0; k < 50; k++)
+	for (int k = 1; k < K_MAX; k++)
 	{
 		cout << "k = " << k << endl;
 		classifier digitClass;
 		digitClass.load_training_data();
 		digitClass.load_testing_data();
-		digitClass.train(5);
+		digitClass.train(k);
 		cout << "done with training" << endl;
 
 		double priorTot = 0;
@@ -30,9 +36,37 @@ int main()
 		digitClass.evaluation();
 		cout << "done with evaluation" << endl;
 
+		double minMAP = 1;
+		double minML = 1;
 		for (int c = 0; c < 10; c++)
-			cout << digitClass.classification_rate[c] << " ";
-		cout << endl;
+		{
+			double cr = digitClass.classification_rateMAP[c];
+			if (minMAP > cr)
+				minMAP = cr;
+			cr = digitClass.classification_rateML[c];
+			if (minML > cr)
+				minML = cr;
+
+			//cout << digitClass.classification_rate[c] << " ";
+		}
+		cout << "Minimum classification rate (MAP): " << minMAP << endl;
+		cout << "Minimum classification rate (ML): " << minML << endl;
+
+		digitClass.confusionMatrix();
+		/*
+		if (to_file == 1)
+		{
+			ofstream f;
+			f.open("predict.txt");
+			for (int i = 0; i < digitClass.predictedLabelsMAP.size(); i++)
+			{
+				ostringstream ss;
+				ss << digitClass.predictedLabelsMAP[i];
+				f << ss.str() << endl;
+			}
+			f.close();
+		}
+		*/
 	}
 
 
