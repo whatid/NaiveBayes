@@ -53,6 +53,7 @@ int main()
 		cout << "Minimum classification rate (ML): " << minML << endl;
 
 		digitClass.confusionMatrix();
+
 		/*
 		if (to_file == 1)
 		{

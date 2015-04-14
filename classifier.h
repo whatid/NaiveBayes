@@ -14,7 +14,9 @@ using namespace std;
 
 class classifier
 {
-
+	private:
+		// finds 4 highest confusion rates and puts them into the "mc" array (below)
+		void get_most_confused(double ** cnf);
 	public:
 
 		int TX;
@@ -34,6 +36,12 @@ class classifier
 
 		// class to 2D array mapping. 
 		map < int, double ** > likelihood; 
+
+		// confusion matrix
+		double ** confusion;
+
+		// stands for most confused, which contains indices of highest confusion rates
+		int mc[8];
 
 		// number of times each "number" appears in the training data.
 		map <int, int> classCount; 
@@ -78,5 +86,6 @@ class classifier
 
 		// make the confusion matrix
 		void confusionMatrix();
+		void info_for_matlab(int k);
 };
 #endif

@@ -157,6 +157,9 @@ void classifier::test()
 
 void classifier::evaluation()
 {
+	/* This is apparently needed to prevent a seg fault caused from a for loop that is totally void of memory operations */
+	confusion = NULL;
+
 	int classificationMAP[10]; 
 	int classificationML[10]; 
 
@@ -273,39 +276,130 @@ void classifier::load_testing_data()
 
 void classifier::confusionMatrix()
 {
+	if (confusion != NULL)
+	{
+		cout << "You must be confused. You already called this function." << endl;
+		return;
+	}
 
-	double ** matrix = new double * [10]; 
+	double ** confusion = new double * [10]; 
 	for (int x = 0; x < 10; x++)
 	{
-		matrix[x] = new double [10]; 
+		confusion[x] = new double [10]; 
 		for (int y = 0; y < 10; y++)
 		{
-			matrix[x][y] = 0; 
+			confusion[x][y] = 0; 
 		}
 	}
 
 	for (int it = 0; it < testClass; it++)
 	{
-		matrix[predictedLabelsMAP[it]][testingLabel[it]] += (1.0 / tclassCount[testingLabel[it]]); 
+		confusion[predictedLabelsMAP[it]][testingLabel[it]] += (1.0 / tclassCount[testingLabel[it]]); 
 	}
 
-	cout.setf(ios::fixed, ios::floatfield);
-	cout.precision(2); 
-	for (int x = 0; x < 10; x++)
+	//cout.setf(ios::fixed, ios::floatfield);
+	//cout.precision(2); 
+	for (int y = 0; y < 10; y++)
 	{
-		for (int y = 0; y < 10; y++)
+		for (int x = 0; x < 10; x++)
 		{
-			cout << (matrix[y][x] * 100) << "%" << " "; 
+			// I made it prettier :) -Brandon
+			ostringstream ss;
+			ss.setf(ios::fixed, ios::floatfield);
+			ss.precision(2);
+			ss << (confusion[y][x] * 100);
+			string s = ss.str();
+			s += "%";
+			s.resize(6, ' ');
+			//cout << (confusion[y][x] * 100) << "%" << " "; 
+			cout << s << " ";
 		}
 		cout << "\n";
 	}
 
+	//cout << confusion << endl;
+	get_most_confused(confusion);
+}
+
+/* THIS IS A PRIVATE FUNCTION */
+void classifier::get_most_confused(double ** cnf)
+{
+	/* the code below stores the indices corresponding to the highest confusion rates
+		say we calculate indices of highest rates, where (r1, c1) corresponds to indices of most confused
+		and (r2, c2) corresponds to second most confused, and so on. The array would look like this:
+		[ r1, c1, r2, c2, r3, c3, r4, c4 ]
+		*/
+
+	for (int i = 0; i < 8; i++)
+		mc[i] = 0; //init
+
+	double max1, max2, max3, max4; // the highest values encountered
+	max1 = max2 = max3 = max4 = 0.0;
+
+	int col_start = 2; // start at 2nd column for first row
+	for (int y = 0; y < 10; y++)
+	{
+		for (int x = col_start; x < 10; x++)
+		{
+			if (x == y) continue; // not considering same class, obviously
+
+			// gina is our candidate. Say hi to her!
+			double gina = cnf[y][x];
+			if (gina > max1)
+			{
+				max1 = gina;
+				mc[0] = y;
+				mc[1] = x;
+			}
+			else if (gina > max2)
+			{
+				max2 = gina;
+				mc[2] = y;
+				mc[3] = x;
+			}
+			else if (gina > max3)
+			{
+				max3 = gina;
+				mc[4] = y;
+				mc[5] = x;
+			}
+			else if (gina > max4)
+			{
+				max4 = gina;
+				cout << "max4 " << max4 << endl;
+				mc[6] = y;
+				mc[7] = x;
+			}
+		}
+		col_start = 0; // from now on, we'll iterate through all columns
+	}
+}
+
+void classifier::info_for_matlab(int k)
+{
+	ostringstream ss;
+	ss << k;
+	string filename = "matlab_info_k" + ss.str() + ".txt";
+	
+	ofstream f;
+	f.open(filename.c_str());
+
+	for (int i = 0; i < 10; i++)
+		for (int m = 0; m < 8; m++)
+		{
+			if (mc[m] == i)
+			{
+				
+			}
+		}
 }
 
 classifier::classifier() {};
 
 classifier::~classifier()
 {
+	// basically frees all allocated memory
+
 	for (int c = 0; c < 10; c++)
 	{
 		if ( likelihood[c] != NULL )
@@ -329,5 +423,16 @@ classifier::~classifier()
 		// deallocate
 		if ( testingData[i] != NULL )
 			delete[] testingData[i];
+	}
+
+	if (confusion != NULL)
+	{
+		for (int c1 = 0; c1 < 10; c1++)
+		{
+			if (confusion[c1] != NULL)
+			{
+				delete[] confusion[c1];
+			}
+		}
 	}
 }
