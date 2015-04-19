@@ -55,6 +55,10 @@ class classifier
 		vector<int> predictedLabelsMAP; 
 		vector<int> predictedLabelsML; 
 
+		// test example with the highest posterior probability. 
+		map < int, double > testexample; 
+
+		map <int, int> idx_example; 
 		
 		int tclassCount[10]; 
 		double classification_rateMAP[10];

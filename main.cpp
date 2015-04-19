@@ -17,7 +17,7 @@ int main(int argc, char ** argv)
 
 	int kBest = 0;
 	double maxAccuracy = 0;
-	for (int k = kmin; k < kmax+1; k++)
+	for (int k = 1; k < K_MAX; k++)
 	{
 		cout << "k = " << k << endl;
 		classifier digitClass;

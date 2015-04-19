@@ -103,6 +103,11 @@ void classifier::test()
 	double maxPosterior = -1.0/0.0; 
 	double maxLikelihood = -1.0/0.0;
 
+	for (int c = 0; c < 10; c++)
+	{
+		testexample[c] = 0.0; 
+	}
+
 	int newy = 0;
 	for (int i = 0; i < testClass; i++)
 	{
@@ -153,12 +158,25 @@ void classifier::test()
 				MAP = c;
 				maxPosterior = result;  
 			}
+
 		}
 		//cout << " MAP " << MAP << endl;
+
+		if (maxPosterior < testexample[MAP])
+		{
+			testexample[MAP] = maxPosterior;
+			idx_example[MAP] = i;  
+		}
+
 		maxPosterior = -1.0/0.0; 
 		maxLikelihood = -1.0/0.0; 
 		predictedLabelsML.push_back(ML);
 		predictedLabelsMAP.push_back(MAP);
+	}
+
+	for (int i = 0; i < 10; i++)
+	{
+		cout << "best example for class" << i << ": " << idx_example[i] << endl; 
 	}
 
 	//for (int henry = 0; henry < predictedLabels.size(); henry++)
