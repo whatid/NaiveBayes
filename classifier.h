@@ -67,6 +67,8 @@ class classifier
 		classifier();
 		~classifier();
 
+		int correct;
+
 		// train method for classifer
 		// calculates prior and likehoods for each class
 		// k is constant for Laplace smoothing

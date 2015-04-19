@@ -174,12 +174,16 @@ void classifier::evaluation()
 
 	//cout << "init to zero" << endl;
 
+	correct = 0;
 	for (int i = 0; i < testClass; i++)
 	{
 		//cout << testingLabel[i] << " " << predictedLabels[i] << endl;
 		tclassCount[testingLabel[i]] += 1; 
 		if (testingLabel[i] == predictedLabelsMAP[i])
+		{
+			correct++;
 			classificationMAP[testingLabel[i]] += 1; 
+		}
 		if (testingLabel[i] == predictedLabelsML[i])
 			classificationML[testingLabel[i]] += 1; 
 	}
@@ -318,7 +322,7 @@ void classifier::confusionMatrix()
 	}
 
 	//cout << confusion << endl;
-	get_most_confused(confusion);
+	//get_most_confused(confusion);
 }
 
 /* THIS IS A PRIVATE FUNCTION */
@@ -366,7 +370,6 @@ void classifier::get_most_confused(double ** cnf)
 			else if (gina > max4)
 			{
 				max4 = gina;
-				cout << "max4 " << max4 << endl;
 				mc[6] = y;
 				mc[7] = x;
 			}
@@ -379,19 +382,47 @@ void classifier::info_for_matlab(int k)
 {
 	ostringstream ss;
 	ss << k;
-	string filename = "matlab_info_k" + ss.str() + ".txt";
+	string filename = "matlab/matlab_info.m";
 	
 	ofstream f;
 	f.open(filename.c_str());
 
-	for (int i = 0; i < 10; i++)
-		for (int m = 0; m < 8; m++)
+			// if class c is in most confused is 
+	vector <int> mc2;
+	mc2.push_back(4);
+	mc2.push_back(8);
+	mc2.push_back(9);
+	mc2.push_back(4);
+	mc2.push_back(9);
+	mc2.push_back(7);
+	mc2.push_back(9);
+	mc2.push_back(8);
+	for (int c = 0; c < 8; c++)
+	{
+		f << "likelihood" << mc2[c] << "=[";
+		for (int y = 0; y < 28; y++)
 		{
-			if (mc[m] == i)
+			for (int x = 0; x < 28; x++)
 			{
-				
+				f << likelihood[mc2[c]][y][x];
+				if (x != 27)
+					f << " ";
 			}
+			if (y != 27)
+				f << ";\n";
+			else
+				f << "];\n\n";
 		}
+	}
+
+	f << "indices = ["; 
+	for (int m = 0; m < 7; m+=2)
+	{
+		f << "[" << mc[m] << "," << mc[m+1] << "] ";
+	}
+	f << "];";
+	
+	f.close();
 }
 
 classifier::classifier() {};

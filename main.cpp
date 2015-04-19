@@ -10,9 +10,14 @@ using namespace std;
 
 int to_file = 1;
 
-int main()
+int main(int argc, char ** argv)
 {
-	for (int k = 1; k < K_MAX; k++)
+	int kmin = atoi(argv[1]);
+	int kmax = atoi(argv[2]);
+
+	int kBest = 0;
+	double maxAccuracy = 0;
+	for (int k = kmin; k < kmax+1; k++)
 	{
 		cout << "k = " << k << endl;
 		classifier digitClass;
@@ -54,7 +59,15 @@ int main()
 
 		digitClass.confusionMatrix();
 
-		/*
+		digitClass.info_for_matlab(k);
+
+		double acc = (double)digitClass.correct/(double)digitClass.testClass;
+		if (maxAccuracy < acc)
+		{
+			maxAccuracy = acc;
+			kBest = k;
+		}
+
 		if (to_file == 1)
 		{
 			ofstream f;
@@ -67,36 +80,32 @@ int main()
 			}
 			f.close();
 		}
-		*/
-	}
-
-
-/*
-	ofstream f;
-	f.open("like.txt");
-	for (int c = 0; c < 10; c++)
-	{
-		string s = "";
-		for (int y = 0; y < 28; y++)
+		ofstream f;
+		f.open("like.txt");
+		for (int c = 0; c < 10; c++)
 		{
-			for (int x = 0; x < 28; x++)
+			string s = "";
+			for (int y = 0; y < 28; y++)
 			{
-				ostringstream ss;
-				ss << digitClass.likelihood[c][y][x];
-				string sB4 = ss.str();
-				if ( sB4.length() != 4 )
+				for (int x = 0; x < 28; x++)
 				{
-					sB4.resize(4, ' ');
+					ostringstream ss;
+					ss << digitClass.likelihood[c][y][x];
+					string sB4 = ss.str();
+					if ( sB4.length() != 7 )
+					{
+						sB4.resize(7, ' ');
+					}
+					s += sB4;
+					if (x != 27) s += " ";
 				}
-				s += sB4;
-				if (x != 27) s += " ";
+				if (y != 27) s += "\n";
 			}
-			if (y != 27) s += "\n";
+			f << s;
+			f << endl << endl;
 		}
-		f << s;
-		f << endl << endl;
+		f.close();
 	}
-	f.close();
-	*/
 
+	cout << "max accuracy " << maxAccuracy << " k = " << kBest << endl;
 }
