@@ -75,6 +75,10 @@ void classifier::train(int k)
 	{
 		double ** matrix = likelihood[c];
 
+		/**********************************
+			FEATURE 1     
+		***********************************/
+
 		// prior calculation
 		prior[c] = (double)classCount[c] / (double)numClass;
 
@@ -82,6 +86,9 @@ void classifier::train(int k)
 		{
 			for (int y = 0; y < 28; y++)
 			{
+				/**********************************
+					FEATURE 2    
+				***********************************/
 				matrix[y][x] = ((double)(matrix[y][x] + k) / (double)(classCount[c] + k * 2)); 
 			}
 		}
@@ -129,6 +136,10 @@ void classifier::test()
 			//result = pow(10.0, result);
 			//cout << "result " << result << " " << "maxPosterior" << " " << maxPosterior << " c " << c;
 			/* We say "less than" because result and maxPosterior are LOGARITHMIC */
+
+		/**********************************
+			FEATURE 3     
+		***********************************/	
 
 			if (result > maxLikelihood)
 			{
